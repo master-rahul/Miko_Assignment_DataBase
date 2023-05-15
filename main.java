@@ -1,13 +1,39 @@
 package main;
 
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.Scanner;
 
 public class main {
+	
+	// Verfying the Column names from query to table
+	public static String checkValidityOfColumns(String[] tableData, String[] columnData) {
+		return null;
+	}
+	
+	//Verfying the DataType of values from the query to metatable
+	public static String checkValidityOfValues(String[] tableData, String[] columnData) {
+		return null;
+	}
+	
+	// Read Files Line By Line
+	public static String[] fileToArray(String filePath) throws IOException {
+        Path path = Paths.get(filePath);
+        return Files.readAllLines(path).toArray(new String[0]);
+    }
+	// Check whether the tableFile or metaTableFiles is present or not.
+	public static boolean ifFileExists(String directoryPath, String fileName) {
+        File directory = new File(directoryPath);
+        File file = new File(directory, fileName);
+        return file.exists();
+    }
 	
 	// To remove additional spaces between characters or words, reduces to single space.
 	 public static String reduceSpaces(String text) {
@@ -17,7 +43,7 @@ public class main {
 	 
 	 public static String checkDataType(String value[][]) {
 		 for(String a[] : value) {
-			 if(a[1].equals("int") ||  a[1].equals("string") || a[1].equals("char")) continue;
+			 if(a[1].toLowerCase().equals("integer") ||  a[1].toLowerCase().equals("string") || a[1].toLowerCase().equals("char")) continue;
 			 else return "The DataTypes for the columns are invalid\n";
 			
 		 }
@@ -54,7 +80,6 @@ public class main {
 			}
 		}
 		if (!stack.isEmpty()) return "Error In Parenthesis At : "+ (7+stack.pop());
-		if(parenthesisCount != 1) return "Please Re-enter a Correct Query : \n";
 		else return null;
 	}
 	
@@ -62,9 +87,9 @@ public class main {
 		// For checking the validity of a query
 		String verifcation = parenthesisCheck(query);
 		if(verifcation != null) return verifcation;
-		int index = query.indexOf(" ");
+		int index = query.indexOf('(');
 		String tableName = "";
-        if (index != -1) tableName = query.substring(0, index) + ".txt";  
+        if (index != -1) tableName = query.substring(0, index).trim() + ".txt";  
         else return "Please re-enter a correct Table Name : \n";
         
         // CREATING THE FILE :
@@ -74,7 +99,6 @@ public class main {
         int startIndex = query.indexOf('(');
         int endIndex = query.indexOf(')');
         query = query.substring(startIndex+1, endIndex).trim();
-        query = reduceSpaces(query);
        // System.out.println(query);
         String queryColumns[][] = convertTo2DArray(query);
         String checkDataTypes = checkDataType(queryColumns);
@@ -95,19 +119,66 @@ public class main {
         } catch (IOException e) {
             System.out.println("An error occurred while creating the file: " + e.getMessage());
         }
-        
-        
-
-      
-        
-		
 		return null;
 	}
+	
+	
+	
+	
+	
+	
+	
+	
 	public static String insertQuery(String query) {
+		if(!query.substring(0, 4).toLowerCase().equals("into")) return "****The Insert Query Syntax is Incorrect****\n";
+		query = query.substring(5);
+		System.out.println(query);
 		String verifcation = parenthesisCheck(query);
+		if(verifcation != null) return verifcation;
+		int index = query.indexOf('(');
+		String tableName = "";
+		String metaName = "";
+        if (index != -1) {
+        	tableName = query.substring(0, index).trim() + ".txt";  
+        	metaName ="meta_"+ query.substring(0, index).trim() + ".txt";  
+        }
+        else return "Please re-enter a correct Table Name : \n";
+        String tableDirectory = System.getProperty("user.dir") +"/database";
+        if(ifFileExists(tableDirectory, tableName)) {
+        	try {
+	        	int startIndex = query.indexOf('(');
+	            int endIndex = query.indexOf(')');
+	            String[] columnArr = query.substring(startIndex+1, endIndex).trim().split(",");
+	            query = query.substring(endIndex+1);
+	            startIndex = query.indexOf('(');
+	            endIndex = query.indexOf(')');
+	            String[] valueArr = query.substring(startIndex +1, endIndex).split(",");
+            	String tableData[] = fileToArray(tableDirectory+"/"+tableName);
+            	String metaData[] = fileToArray(tableDirectory+"/"+metaName);
+            	for(String d : tableData) System.out.println(d);
+            	for(String d : metaData) System.out.println(d);
+            	for(int i = 0; i < valueArr.length; i++) valueArr[i] = valueArr[i].trim();
+            	for(int i = 0; i < columnArr.length; i++) columnArr[i] = columnArr[i].trim();
+            	//for(String ss : columnArr) System.out.println(ss);
+            	//for(String ss : valueArr) System.out.println(ss);
+            	String validity = checkValidityOfColumns(tableData, columnArr);
+            	if(validity != null) return validity;
+            	validity = checkValidityOfValues(metaData, valueArr);
+            	if(validity != null) return validity;
+            }catch(IOException e) {
+            	 System.out.println("An error occurred while reading the file: " + e.getMessage());
+            }
+        	
+        }else return "*****The Table is not Present, Please Create First *****\n";
+        
 		
 		return null;	
 	}
+	
+	
+	
+	
+	
 	public static String updateQuery(String query) {
 		String verifcation = parenthesisCheck(query);
 		
@@ -134,8 +205,9 @@ public class main {
 		// For Storing Path of Table Metadata Files
 		ArrayList<String> metadata = new ArrayList<>();
 		while(true) {
+			System.out.print("Please Enter Your Query Or Type Exit to terminate : \n");
 			String query = s.nextLine();
-			
+			 query = reduceSpaces(query);
 			// TERMINATES THE PROGRAM
 			if(query.toLowerCase().equals("exit")) {   
 				System.out.println("################## THANKS FOR USING OUR SIMPLE DATABSE ##################");
@@ -153,7 +225,8 @@ public class main {
 					// For creating a table
 					case "create " : 
 						reply = createQuery(query.substring(7));
-						System.out.println(reply);
+						if(reply == null) System.out.println("!!!!!!!!Congrats Your table is created successfully!!!!!!!!\n");
+						else System.out.println(reply);
 						break;
 					// For inserting into table
 					case "insert " : 
