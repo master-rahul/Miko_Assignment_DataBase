@@ -1,6 +1,9 @@
 package main;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -15,25 +18,83 @@ import java.util.Scanner;
 
 public class main {
 	
+	// Inserting new data in the file based on insert Query
+	public static void addStringToEndOfFile(String filePath, String[] array) throws IOException {
+        File inputFile = new File(filePath);
+        File tempFile = new File("temp.txt");
+
+        BufferedReader reader = new BufferedReader(new FileReader(inputFile));
+        BufferedWriter writer = new BufferedWriter(new FileWriter(tempFile));
+
+        String line;
+        int index = 0;
+
+        while ((line = reader.readLine()) != null) {
+            if (index < array.length) {
+                line +=  array[index]+", ";
+            }
+            writer.write(line);
+            writer.newLine();
+            index++;
+        }
+
+        reader.close();
+        writer.close();
+
+        // Replace the original file with the modified file
+        if (inputFile.delete()) {
+            tempFile.renameTo(inputFile);
+        } else {
+            throw new IOException("Failed to replace the original file.");
+        }
+    }
+	
 	// Verfying the Column names from query to table
 	public static String checkValidityOfColumns(String[] tableData, String[] columnData) {
 		System.out.println("TableData and Column Check");
 		for(String ss : tableData) System.out.println(ss);
     	for(String ss : columnData) System.out.println(ss);
-    	if(tableData.length < columnData.length) return "*****Column Not Present in Table*****\n";
+    	if(tableData.length < columnData.length) return "*****Column Not Present in Table In Query*****\n";
     	Map<String, Integer> map = new HashMap<>();
     	for(String columName : tableData) {
     		columName = columName.substring(0, columName.indexOf(":")-1);
     		map.put(columName, 0);
     	}
-    	for(String columnName  : columnData) if(!map.containsKey(columnName)) return "*****Invalid Column for Table*****\n";
+    	for(String columnName  : columnData) if(!map.containsKey(columnName)) return "*****Invalid Column for Table In Query*****\n";
 		return null;
 	}
 	
 	//Verfying the DataType of values from the query to metatable
-	public static String checkValidityOfValues(String[] metaData, String[] valueData) {
+	public static String checkValidityOfValues(String[] metaData, String[] valueData, String[] columnData) {
+		System.out.println("MetaData and Value Check");
 		for(String ss : metaData) System.out.println(ss);
     	for(String ss : valueData) System.out.println(ss);
+    	if(columnData.length != valueData.length) return "*****Values for Unknown Column Present In Query*****\n";
+    	Map<String, Integer> map = new HashMap<>();
+    	for(int i = 0; i < metaData.length; i++) {
+    		String columName = metaData[i];
+    		columName = columName.substring(columName.indexOf("[")+1, columName.indexOf(":"));
+    		map.put(columName, i);
+    	}
+    	for(int i =0; i < columnData.length; i++) {
+    		if(map.containsKey(columnData[i])) {
+    			int index = map.get(columnData[i]);
+    			String type = metaData[index].substring(metaData[index].indexOf(":")+1, metaData[index].indexOf("]"));
+    			if(valueData[i].charAt(0) =='\"' && type.charAt(0) != 'i') {
+    				if(valueData[i].length() > 3 &&type.charAt(0) == 's' ) {
+    					continue;
+    				}else if(valueData[i].length() == 3 &&type.charAt(0) == 'c'){
+    					continue;
+    				}else {
+    					return "****Invalid Type For Value in Query*****\n";
+    				}
+    			}else if(valueData[i].charAt(0) != '\"' && type.charAt(0) == 'i') {
+    				continue;
+    			}else {
+    				return "****Invalid Type For Value in Query*****\n";
+    			}
+    		}
+    	}
 		return null;
 	}
 	
@@ -177,8 +238,26 @@ public class main {
             	//for(String ss : valueArr) System.out.println(ss);
             	String validity = checkValidityOfColumns(tableData, columnArr);
             	if(validity != null) return validity;
-            	validity = checkValidityOfValues(metaData, valueArr);
+            	validity = checkValidityOfValues(metaData, valueArr, columnArr);
             	if(validity != null) return validity;
+            	// Column Values To be inserted in Table
+            	String value[] = new String[tableData.length];
+            	for (int i = 0; i < value.length; i++)value[i] = ""; 
+            	Map<String, Integer> map = new HashMap<>();
+            	for(int i = 0; i < metaData.length; i++) {
+            		String columName = metaData[i];
+            		columName = columName.substring(columName.indexOf("[")+1, columName.indexOf(":"));
+            		map.put(columName, i);
+            	}
+            	for(int i =0; i < columnArr.length; i++) {
+            		if(map.containsKey(columnArr[i])) {
+            			int pos = map.get(columnArr[i]);
+            			value[pos] = valueArr[i];
+            		}
+            	}
+            	System.out.println("Values to Be Inserted");
+            	for(String sst  : value) System.out.print(sst);
+            	addStringToEndOfFile(tableDirectory+"/"+tableName, value);
             }catch(IOException e) {
             	 System.out.println("An error occurred while reading the file: " + e.getMessage());
             }
@@ -212,7 +291,6 @@ public class main {
 		Scanner s = new Scanner(System.in);
 		
 		System.out.print("WELCOME TO FILE BASED DATABASE SYSTEM USING JAVA\n");
-		System.out.print("Please Enter Your Query Or Type Exit to terminate : \n");
 		
 		// For Storing Path of Table Files
 		ArrayList<String> tables = new ArrayList<>();
