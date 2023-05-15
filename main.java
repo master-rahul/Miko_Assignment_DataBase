@@ -9,17 +9,31 @@ import java.nio.file.Paths;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Scanner;
 
 public class main {
 	
 	// Verfying the Column names from query to table
 	public static String checkValidityOfColumns(String[] tableData, String[] columnData) {
+		System.out.println("TableData and Column Check");
+		for(String ss : tableData) System.out.println(ss);
+    	for(String ss : columnData) System.out.println(ss);
+    	if(tableData.length < columnData.length) return "*****Column Not Present in Table*****\n";
+    	Map<String, Integer> map = new HashMap<>();
+    	for(String columName : tableData) {
+    		columName = columName.substring(0, columName.indexOf(":")-1);
+    		map.put(columName, 0);
+    	}
+    	for(String columnName  : columnData) if(!map.containsKey(columnName)) return "*****Invalid Column for Table*****\n";
 		return null;
 	}
 	
 	//Verfying the DataType of values from the query to metatable
-	public static String checkValidityOfValues(String[] tableData, String[] columnData) {
+	public static String checkValidityOfValues(String[] metaData, String[] valueData) {
+		for(String ss : metaData) System.out.println(ss);
+    	for(String ss : valueData) System.out.println(ss);
 		return null;
 	}
 	
