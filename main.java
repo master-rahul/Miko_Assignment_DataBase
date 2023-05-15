@@ -14,7 +14,17 @@ public class main {
 	        String reducedText = text.replaceAll("\\s+", " ");
 	        return reducedText;
 	    }
-	
+	 
+	 public static String checkDataType(String value[][]) {
+		 for(String a[] : value) {
+			 if(a[1].equals("int") ||  a[1].equals("string") || a[1].equals("char")) continue;
+			 else return "The DataTypes for the columns are invalid\n";
+			
+		 }
+		 return null;
+	 }
+	 
+	// Converting the column_names and data_types to 2D Array 
 	public static String[][] convertTo2DArray(String input) {
 		 // Spliting by commas
         String[] firstSplit = input.split(",");
@@ -67,6 +77,8 @@ public class main {
         query = reduceSpaces(query);
        // System.out.println(query);
         String queryColumns[][] = convertTo2DArray(query);
+        String checkDataTypes = checkDataType(queryColumns);
+        if(checkDataTypes != null) return checkDataTypes;
         System.out.println(query);
         for(String a[] : queryColumns) {
         	for(String cc  : a) System.out.print(cc+",");
