@@ -18,6 +18,22 @@ import java.util.Scanner;
 
 public class main {
 	
+	// Verify and Create the Database folder for storing the table file and meta file
+	public static void checkDatabase(String folderPath) {
+		File folder = new File(folderPath);
+        
+        if (!folder.exists()) {
+            boolean created = folder.mkdirs();
+            if (created) {
+                System.out.println("Folder created successfully!");
+            } else {
+                System.out.println("Failed to create folder.");
+            }
+        } else {
+            System.out.println("Folder already exists.");
+        }
+	}
+	
 	// Inserting the Values Of Query into the respective table
 	public static void addStringToEndOfFile(String filePath, String[] array) throws IOException {
 		
@@ -197,6 +213,12 @@ public class main {
 	// Creating a Table via CreateQuery
 	public static String createQuery(String query) {
 		
+		// Getting the current directory
+        String currentDirectory = System.getProperty("user.dir");
+        
+		//Verifying whether the database folder present or not
+		checkDatabase(currentDirectory + "/database");
+		
 		// Verifying The Parenthesis in the Query
 		String verifcation = parenthesisCheck(query);
 		if(verifcation != null) return verifcation;
@@ -207,8 +229,7 @@ public class main {
         if (index != -1) tableName = query.substring(0, index).trim() + ".txt";  
         else return "* Please re-enter a correct Table Name : *\n";
         
-        // Getting the current directory
-        String currentDirectory = System.getProperty("user.dir");
+       
         
         // Getting the path for table file
         String tablePath = currentDirectory + "/database/" + tableName;
