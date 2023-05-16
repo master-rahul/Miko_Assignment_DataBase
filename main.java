@@ -121,41 +121,49 @@ public class main {
 		return null;
 	}
 	
-	// Read Files Line By Line
+	// Converting Each Line of a File into an element in String Array
 	public static String[] fileToArray(String filePath) throws IOException {
         Path path = Paths.get(filePath);
         return Files.readAllLines(path).toArray(new String[0]);
     }
-	// Check whether the tableFile or metaTableFiles is present or not.
+	
+	// Verifying whether the table file and table meta file exits or not
 	public static boolean ifFileExists(String directoryPath, String fileName) {
         File directory = new File(directoryPath);
         File file = new File(directory, fileName);
         return file.exists();
     }
 	
-	// To remove additional spaces between characters or words, reduces to single space.
+	// Removes additional Spaces from the Query, making maximum 1 space amongst and words or characters.
 	 public static String reduceSpaces(String text) {
-	        String reducedText = text.replaceAll("\\s+", " ");
-	        return reducedText;
-	    }
+        String reducedText = text.replaceAll("\\s+", " ");
+        return reducedText;
+	 }
 	 
+	 // Verifying the DataType of the columns given in the Query
 	 public static String checkDataType(String value[][]) {
 		 for(String a[] : value) {
 			 if(a[1].toLowerCase().equals("integer") ||  a[1].toLowerCase().equals("string") || a[1].toLowerCase().equals("char")) continue;
-			 else return "The DataTypes for the columns are invalid\n";
-			
+			 else return "*DataTypes Invalid for Columne*\n";
 		 }
 		 return null;
 	 }
 	 
-	// Converting the column_names and data_types to 2D Array 
-	public static String[][] convertTo2DArray(String input) {
-		 // Spliting by commas
-        String[] firstSplit = input.split(",");
+	// Converting the Column Name and Column DataTypes into a 2D array with 2 column of column_name and data_type respectively
+	public static String[][] convertTo2DArray(String query) {
+		
+		// Splitting the query into 1D array based on comma
+        String[] firstSplit = query.split(",");
+        
+        // Creating a 2D array of length based on number of column 
         String[][] result = new String[firstSplit.length][];
+        
+        //Populating the 2D array by splitting each element of 1D array based on space
         for (int i = 0; i < firstSplit.length; i++) {
         	// Split each element by spaces
             String[] secondSplit = firstSplit[i].trim().split(" "); 
+            // System.out.println("Splitting column and datatype");
+            //System.out.println(secondSplit[0] +" :: "+ secondSplit[1]);
             result[i] = new String[secondSplit.length];
             for (int j = 0; j < secondSplit.length; j++) {
                 result[i][j] = secondSplit[j];
@@ -201,11 +209,11 @@ public class main {
         String queryColumns[][] = convertTo2DArray(query);
         String checkDataTypes = checkDataType(queryColumns);
         if(checkDataTypes != null) return checkDataTypes;
-        System.out.println(query);
-        for(String a[] : queryColumns) {
-        	for(String cc  : a) System.out.print(cc+",");
-        	System.out.println();
-        }
+        //System.out.println(query);
+        //for(String a[] : queryColumns) {
+        //	for(String cc  : a) System.out.print(cc+",");
+        //	System.out.println();
+        //}
         try (FileWriter tableWriter = new FileWriter(tablePath); FileWriter metaWriter = new FileWriter(metaPath)) {
         	for(String listItem[] : queryColumns) {
         		metaWriter.write("[" + listItem[0] + ":" + listItem[1] + "]\n");
@@ -213,7 +221,7 @@ public class main {
         	}
         	metaWriter.flush();     
         	tableWriter.flush();
-            System.out.println("Table created successfully.");
+            //System.out.println("Table created successfully.");
         } catch (IOException e) {
             System.out.println("An error occurred while creating the file: " + e.getMessage());
         }
@@ -281,6 +289,7 @@ public class main {
             	System.out.println("Values to Be Inserted");
             	for(String sst  : value) System.out.print(sst);
             	addStringToEndOfFile(tableDirectory+"/"+tableName, value);
+            	//System.out.println("Values inserted into table successfully.");
             }catch(IOException e) {
             	 System.out.println("An error occurred while reading the file: " + e.getMessage());
             }
@@ -340,14 +349,14 @@ public class main {
 					// For creating a table
 					case "create " : 
 						reply = createQuery(query.substring(7));
-						if(reply == null) System.out.println("!!!!!!!!Congrats Your table is created successfully!!!!!!!!\n");
+						if(reply == null) System.out.println("!!  Congrats Your table is created successfully  !!\n");
 						else System.out.println(reply);
 						break;
 					// For inserting into table
 					case "insert " : 
 						reply = insertQuery(query.substring(7));
-						System.out.println(reply);
-						
+						if(reply == null) System.out.println("!!  Values inserted into table successfully  !!\n");
+		            	else System.out.println(reply);
 						break;
 					// For updating table
 					case "update " : 
