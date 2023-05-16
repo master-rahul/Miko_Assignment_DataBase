@@ -55,7 +55,7 @@ public class main {
 		//for(String ss : columnData) System.out.println(ss);
 		
 		// Checks whether the number of columns in query is less than or equal to number of  columns in table 
-    	if(tableData.length < columnData.length) return "*Column Not Present in Table In Query*\n";
+    	if(tableData.length < columnData.length) return "* Column Not Present in Table In Query *\n";
     	
     	// Converting the table data into Hashmap having key as column name
     	Map<String, Integer> map = new HashMap<>();
@@ -67,7 +67,7 @@ public class main {
     	}
     	
     	// Verifying the column names present in query to the keys of Hashmap which are actual column name of table
-    	for(String columnName  : columnData) if(!map.containsKey(columnName)) return "*Invalid Column for Table In Query*\n";
+    	for(String columnName  : columnData) if(!map.containsKey(columnName)) return "* Invalid Column for Table In Query *\n";
 		return null;
 	}
 	
@@ -78,7 +78,7 @@ public class main {
     	//for(String ss : valueData) System.out.println(ss);
 		
 		//Verifying whether the number of columns and number of values matches in Query
-    	if(columnData.length != valueData.length) return "*Values for Unknown Column Present In Query*\n";
+    	if(columnData.length != valueData.length) return "* Values for Unknown Column Present In Query *\n";
     	
     	// Converting the metadata into Hashmap having key as column name
     	Map<String, Integer> map = new HashMap<>();
@@ -109,12 +109,12 @@ public class main {
     				}else if(valueData[i].length() == 3 &&type.charAt(0) == 'c'){	// Checks for Character
     					continue;
     				}else {
-    					return "*Invalid Type For Value in Query*\n";
-    				}
+    					return "* Invalid Type For Value in Query *\n";
+    				} 
     			}else if(valueData[i].charAt(0) != '\"' && type.charAt(0) == 'i') {	// Checks for not String and Character but Integer
     				continue;
     			}else {
-    				return "*Invalid Type For Value in Query*\n";
+    				return "* Invalid Type For Value in Query *\n";
     			}
     		}
     	}
@@ -144,7 +144,7 @@ public class main {
 	 public static String checkDataType(String value[][]) {
 		 for(String a[] : value) {
 			 if(a[1].toLowerCase().equals("integer") ||  a[1].toLowerCase().equals("string") || a[1].toLowerCase().equals("char")) continue;
-			 else return "*DataTypes Invalid for Columne*\n";
+			 else return "* DataTypes Invalid for Column *\n";
 		 }
 		 return null;
 	 }
@@ -185,12 +185,12 @@ public class main {
 				parenthesisCount++;
 			} // Checks for closing parenthesis
 			else if(query.charAt(i) ==')') {
-				if(stack.isEmpty()) return "*Error In Parenthesis*\n";
-				stack.pop();
+				if(stack.isEmpty()) return "* Error In Parenthesis *\n";
+				stack.pop(); 
 			}
 		}
-		if (!stack.isEmpty()) return "*Error In Parenthesis*\n";
-		if(parenthesisCount != 1) return "*Error In Parenthesis*\n";
+		if (!stack.isEmpty()) return "* Error In Parenthesis *\n";
+		if(parenthesisCount != 1) return "* Error In Parenthesis *\n";
 		else return null;
 	}
 	
@@ -205,7 +205,7 @@ public class main {
 		int index = query.indexOf('(');
 		String tableName = "";
         if (index != -1) tableName = query.substring(0, index).trim() + ".txt";  
-        else return "*Please re-enter a correct Table Name : *\n";
+        else return "* Please re-enter a correct Table Name : *\n";
         
         // Getting the current directory
         String currentDirectory = System.getProperty("user.dir");
@@ -260,7 +260,7 @@ public class main {
 	// Inserting into a table using Insert Query
 	public static String insertQuery(String query) {
 		// Verifying the query containing keyword 'into'
-		if(!query.substring(0, 4).toLowerCase().equals("into")) return "*The Insert Query Syntax is Incorrect*\n";
+		if(!query.substring(0, 4).toLowerCase().equals("into")) return "* The Insert Query Syntax is Incorrect *\n";
 		
 		// Reducing the query to query after the word 'into'
 		query = query.substring(5);
@@ -279,7 +279,7 @@ public class main {
         	tableName = query.substring(0, index).trim() + ".txt";  
         	metaName ="meta_"+ query.substring(0, index).trim() + ".txt";  
         }
-        else return "*Please re-enter a correct Table Name : \n*";
+        else return "* Please re-enter a correct Table Name : *\n";
         
         // Getting the directory of table file
         String tableDirectory = System.getProperty("user.dir") +"/database";
@@ -300,47 +300,69 @@ public class main {
 	            verifcation = parenthesisCheck(query);
 	    		if(verifcation != null) return verifcation;
 	    		
-	            if(!query.substring(0, query.indexOf('(')).trim().toLowerCase().equals("values")) return "*Insert Query Invalid*\n";
+	            if(!query.substring(0, query.indexOf('(')).trim().toLowerCase().equals("values")) return "* Insert Query Invalid *\n";
 	            startIndex = query.indexOf('(');
 	            endIndex = query.indexOf(')');
 	            
+	            // Getting the values for columns
 	            String[] valueArr = query.substring(startIndex +1, endIndex).split(",");
+	            
+	            // Getting the table data into 1D array based on each line in file
             	String tableData[] = fileToArray(tableDirectory+"/"+tableName);
+            	
+	            // Getting the meta data into 1D array based on each line in file
             	String metaData[] = fileToArray(tableDirectory+"/"+metaName);
-            	for(String d : tableData) System.out.println(d);
-            	for(String d : metaData) System.out.println(d);
+            	//for(String d : tableData) System.out.println(d);
+            	//for(String d : metaData) System.out.println(d);
+            	
+            	// Removing additional spaces from both 1D array items holding the table data
             	for(int i = 0; i < valueArr.length; i++) valueArr[i] = valueArr[i].trim();
+            	
+            	// Removing additional spaces from both 1D array items holding the meta data
             	for(int i = 0; i < columnArr.length; i++) columnArr[i] = columnArr[i].trim();
+            	
             	//for(String ss : columnArr) System.out.println(ss);
             	//for(String ss : valueArr) System.out.println(ss);
+            	
+            	// Validating the column names present in query with column names present in table file
             	String validity = checkValidityOfColumns(tableData, columnArr);
             	if(validity != null) return validity;
+            	
+            	// Validating the column value present in query with column data_type present in meta file
             	validity = checkValidityOfValues(metaData, valueArr, columnArr);
             	if(validity != null) return validity;
-            	// Column Values To be inserted in Table
+            	
+            	// Inserting column values from the query to 1D String array
             	String value[] = new String[tableData.length];
             	for (int i = 0; i < value.length; i++)value[i] = ""; 
             	Map<String, Integer> map = new HashMap<>();
             	for(int i = 0; i < metaData.length; i++) {
             		String columName = metaData[i];
+            		// Reducing the meta data information into column name
             		columName = columName.substring(columName.indexOf("[")+1, columName.indexOf(":"));
+            		// Inserting the column name as key and the meta data line as value
             		map.put(columName, i);
             	}
+            	
+            	// Mapping the values of query into the value array for inserting into table file
             	for(int i =0; i < columnArr.length; i++) {
             		if(map.containsKey(columnArr[i])) {
             			int pos = map.get(columnArr[i]);
             			value[pos] = valueArr[i];
             		}
             	}
+            	
             	// System.out.println("Values to Be Inserted");
             	// for(String sst  : value) System.out.print(sst);
+            	
+            	// Inserting the values from the query to respective column list
             	addStringToEndOfFile(tableDirectory+"/"+tableName, value);
             	//System.out.println("Values inserted into table successfully.");
             }catch(IOException e) {
             	 System.out.println("An error occurred while reading the file: " + e.getMessage());
             }
         	
-        }else return "*****The Table is not Present, Please Create First *****\n";
+        }else return "* The Table is not Present, Please Create First *\n";
         
 		
 		return null;	
