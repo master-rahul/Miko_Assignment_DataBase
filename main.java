@@ -18,80 +18,103 @@ import java.util.Scanner;
 
 public class main {
 	
-	// Inserting new data in the file based on insert Query
+	// Inserting the Values Of Query into the respective table
 	public static void addStringToEndOfFile(String filePath, String[] array) throws IOException {
+		
+		// File object for table file
         File inputFile = new File(filePath);
+        // File object for newly created file
         File tempFile = new File("temp.txt");
-
+        
+        // Reading files using BufferedReader
         BufferedReader reader = new BufferedReader(new FileReader(inputFile));
         BufferedWriter writer = new BufferedWriter(new FileWriter(tempFile));
-
+        
         String line;
         int index = 0;
-
+        
+        // Adding lines from the table and array in temp.txt
         while ((line = reader.readLine()) != null) {
-            if (index < array.length) {
-                line +=  array[index]+", ";
-            }
+            if (index < array.length) line +=  array[index]+", ";
             writer.write(line);
             writer.newLine();
             index++;
         }
-
         reader.close();
         writer.close();
-
-        // Replace the original file with the modified file
-        if (inputFile.delete()) {
-            tempFile.renameTo(inputFile);
-        } else {
-            throw new IOException("Failed to replace the original file.");
-        }
+        
+        // Replacing the table file with the modified file temp.txt
+        if (inputFile.delete()) tempFile.renameTo(inputFile);
+        else throw new IOException("Failed to replace the original file with new file");
     }
 	
-	// Verfying the Column names from query to table
+	// Verifying whether the column names given in Insert Query is Correct
 	public static String checkValidityOfColumns(String[] tableData, String[] columnData) {
-		System.out.println("TableData and Column Check");
-		for(String ss : tableData) System.out.println(ss);
-    	for(String ss : columnData) System.out.println(ss);
-    	if(tableData.length < columnData.length) return "*****Column Not Present in Table In Query*****\n";
+		
+		//for(String ss : tableData) System.out.println(ss);
+		//for(String ss : columnData) System.out.println(ss);
+		
+		// Checks whether the number of columns in query is less than or equal to number of  columns in table 
+    	if(tableData.length < columnData.length) return "*Column Not Present in Table In Query*\n";
+    	
+    	// Converting the table data into Hashmap having key as column name
     	Map<String, Integer> map = new HashMap<>();
+    	
+    	// Populating the HashMap
     	for(String columName : tableData) {
     		columName = columName.substring(0, columName.indexOf(":")-1);
     		map.put(columName, 0);
     	}
-    	for(String columnName  : columnData) if(!map.containsKey(columnName)) return "*****Invalid Column for Table In Query*****\n";
+    	
+    	// Verifying the column names present in query to the keys of Hashmap which are actual column name of table
+    	for(String columnName  : columnData) if(!map.containsKey(columnName)) return "*Invalid Column for Table In Query*\n";
 		return null;
 	}
 	
-	//Verfying the DataType of values from the query to metatable
+	//Verifying the DataType of values given in the Insert query via metaFile
 	public static String checkValidityOfValues(String[] metaData, String[] valueData, String[] columnData) {
-		System.out.println("MetaData and Value Check");
-		for(String ss : metaData) System.out.println(ss);
-    	for(String ss : valueData) System.out.println(ss);
-    	if(columnData.length != valueData.length) return "*****Values for Unknown Column Present In Query*****\n";
+		
+		//for(String ss : metaData) System.out.println(ss);
+    	//for(String ss : valueData) System.out.println(ss);
+		
+		//Verifying whether the number of columns and number of values matches in Query
+    	if(columnData.length != valueData.length) return "*Values for Unknown Column Present In Query*\n";
+    	
+    	// Converting the metadata into Hashmap having key as column name
     	Map<String, Integer> map = new HashMap<>();
+    	
+    	// Populating the HashMap with key as column name and value with index or position of column in file
     	for(int i = 0; i < metaData.length; i++) {
     		String columName = metaData[i];
     		columName = columName.substring(columName.indexOf("[")+1, columName.indexOf(":"));
     		map.put(columName, i);
     	}
+    	
+    	// Iterating through with the columns present in columnData
     	for(int i =0; i < columnData.length; i++) {
+    		
+    		// Checking whether the map contains the columnData item
     		if(map.containsKey(columnData[i])) {
+    			
+    			// We get the index of the column which is the line at which this column is present
     			int index = map.get(columnData[i]);
+    			
+    			// Finding the DataType of column from the metaData Array
     			String type = metaData[index].substring(metaData[index].indexOf(":")+1, metaData[index].indexOf("]"));
-    			if(valueData[i].charAt(0) =='\"' && type.charAt(0) != 'i') {
-    				if(valueData[i].length() > 3 &&type.charAt(0) == 's' ) {
+    			
+    			// Verifying the type of data in Value Array to the type we found for the column in meta file.
+    			if(valueData[i].charAt(0) =='\"' && type.charAt(0) != 'i') {      	// Checks for String or Char but not Integer
+    				if(valueData[i].length() > 3 &&type.charAt(0) == 's' ) {	  	// Checks for String
     					continue;
-    				}else if(valueData[i].length() == 3 &&type.charAt(0) == 'c'){
+    				}else if(valueData[i].length() == 3 &&type.charAt(0) == 'c'){	// Checks for Character
     					continue;
     				}else {
-    					return "****Invalid Type For Value in Query*****\n";
+    					return "*Invalid Type For Value in Query*\n";
     				}
-    			}else if(valueData[i].charAt(0) != '\"' && type.charAt(0) == 'i') {
+    			}else if(valueData[i].charAt(0) != '\"' && type.charAt(0) == 'i') {	// Checks for not String and Character but Integer
     				continue;
     			}else {
-    				return "****Invalid Type For Value in Query*****\n";
+    				return "*Invalid Type For Value in Query*\n";
     			}
     		}
     	}
