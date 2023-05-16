@@ -172,51 +172,80 @@ public class main {
         return result;
     }
 	
+	// Validating the parenthesis for the query
 	public static String parenthesisCheck(String query) {
+		// Deque for inserting the index at which the parenthesis occurs.
 		Deque<Integer> stack = new ArrayDeque<>();
 		int parenthesisCount= 0;
 		for(int i = 0; i < query.length(); i++) {
+			
+			// Checks for opening parenthesis
 			if(query.charAt(i) == '(') {
 				stack.push(i);
 				parenthesisCount++;
-			}
+			} // Checks for closing parenthesis
 			else if(query.charAt(i) ==')') {
-				if(stack.isEmpty()) return "Error In Parenthesis At : "+ (7+i);
+				if(stack.isEmpty()) return "*Error In Parenthesis*\n";
 				stack.pop();
 			}
 		}
-		if (!stack.isEmpty()) return "Error In Parenthesis At : "+ (7+stack.pop());
+		if (!stack.isEmpty()) return "*Error In Parenthesis*\n";
+		if(parenthesisCount != 1) return "*Error In Parenthesis*\n";
 		else return null;
 	}
 	
+	// Creating a Table via CreateQuery
 	public static String createQuery(String query) {
-		// For checking the validity of a query
+		
+		// Verifying The Parenthesis in the Query
 		String verifcation = parenthesisCheck(query);
 		if(verifcation != null) return verifcation;
+		
+		// Fetching the table_name from the query
 		int index = query.indexOf('(');
 		String tableName = "";
         if (index != -1) tableName = query.substring(0, index).trim() + ".txt";  
-        else return "Please re-enter a correct Table Name : \n";
+        else return "*Please re-enter a correct Table Name : *\n";
         
-        // CREATING THE FILE :
+        // Getting the current directory
         String currentDirectory = System.getProperty("user.dir");
+        
+        // Getting the path for table file
         String tablePath = currentDirectory + "/database/" + tableName;
+        
+        // Getting the path for maeta file
         String metaPath = currentDirectory + "/database/meta_" + tableName;
+        
         int startIndex = query.indexOf('(');
         int endIndex = query.indexOf(')');
+        
+        // Reducing the query to string inside '(' and ')'
         query = query.substring(startIndex+1, endIndex).trim();
-       // System.out.println(query);
+        // System.out.println(query);
+        
+        // Converting the reduced query to 2D array for inserting in values into table file and meta file
         String queryColumns[][] = convertTo2DArray(query);
+        
+        // Verifying the DataType of the columns
         String checkDataTypes = checkDataType(queryColumns);
         if(checkDataTypes != null) return checkDataTypes;
+        
         //System.out.println(query);
         //for(String a[] : queryColumns) {
         //	for(String cc  : a) System.out.print(cc+",");
         //	System.out.println();
         //}
+        
+        // Creating table file and meta file using FileWriter
         try (FileWriter tableWriter = new FileWriter(tablePath); FileWriter metaWriter = new FileWriter(metaPath)) {
+        	
+        	// Writes the listItems into table file and meta file
         	for(String listItem[] : queryColumns) {
+        		
+        		// Writing into the meta file
         		metaWriter.write("[" + listItem[0] + ":" + listItem[1] + "]\n");
+        		
+        		// Writing into the table file
         		tableWriter.write(""+listItem[0] + " : \n");
         	}
         	metaWriter.flush();     
@@ -228,36 +257,53 @@ public class main {
 		return null;
 	}
 	
-	
-	
-	
-	
-	
-	
-	
+	// Inserting into a table using Insert Query
 	public static String insertQuery(String query) {
-		if(!query.substring(0, 4).toLowerCase().equals("into")) return "****The Insert Query Syntax is Incorrect****\n";
+		// Verifying the query containing keyword 'into'
+		if(!query.substring(0, 4).toLowerCase().equals("into")) return "*The Insert Query Syntax is Incorrect*\n";
+		
+		// Reducing the query to query after the word 'into'
 		query = query.substring(5);
-		System.out.println(query);
-		String verifcation = parenthesisCheck(query);
+		//System.out.println(query);
+		
+		// Verifying The Parenthesis in the Query
+		String verifcation = parenthesisCheck(query.substring(0, query.indexOf(')')+1));
 		if(verifcation != null) return verifcation;
+		
 		int index = query.indexOf('(');
 		String tableName = "";
 		String metaName = "";
+		
+		// Fetching the table_name from query
         if (index != -1) {
         	tableName = query.substring(0, index).trim() + ".txt";  
         	metaName ="meta_"+ query.substring(0, index).trim() + ".txt";  
         }
-        else return "Please re-enter a correct Table Name : \n";
+        else return "*Please re-enter a correct Table Name : \n*";
+        
+        // Getting the directory of table file
         String tableDirectory = System.getProperty("user.dir") +"/database";
+        
+        // Checking whether the table name present in query is present in out database
         if(ifFileExists(tableDirectory, tableName)) {
         	try {
 	        	int startIndex = query.indexOf('(');
 	            int endIndex = query.indexOf(')');
+	            
+	            // Getting the column names from the query
 	            String[] columnArr = query.substring(startIndex+1, endIndex).trim().split(",");
-	            query = query.substring(endIndex+1);
+	            
+	            // Reducing the query to remaining string after column names
+	            query = query.substring(endIndex+1).trim();
+	            
+	            // Verifying the the second pair of parenthesis
+	            verifcation = parenthesisCheck(query);
+	    		if(verifcation != null) return verifcation;
+	    		
+	            if(!query.substring(0, query.indexOf('(')).trim().toLowerCase().equals("values")) return "*Insert Query Invalid*\n";
 	            startIndex = query.indexOf('(');
 	            endIndex = query.indexOf(')');
+	            
 	            String[] valueArr = query.substring(startIndex +1, endIndex).split(",");
             	String tableData[] = fileToArray(tableDirectory+"/"+tableName);
             	String metaData[] = fileToArray(tableDirectory+"/"+metaName);
@@ -286,8 +332,8 @@ public class main {
             			value[pos] = valueArr[i];
             		}
             	}
-            	System.out.println("Values to Be Inserted");
-            	for(String sst  : value) System.out.print(sst);
+            	// System.out.println("Values to Be Inserted");
+            	// for(String sst  : value) System.out.print(sst);
             	addStringToEndOfFile(tableDirectory+"/"+tableName, value);
             	//System.out.println("Values inserted into table successfully.");
             }catch(IOException e) {
